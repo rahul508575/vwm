@@ -1,35 +1,42 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { Stack } from "expo-router";
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
+export default function RootLayout() {
   return (
-    <Tabs
+    <Stack
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
-    </Tabs>
+      }}
+    >
+      {/* Auth Screens */}
+      {/* <Stack.Screen name="home" /> */}
+      <Stack.Screen name="signup" /> {/* Register */}
+      <Stack.Screen name="home" /> {/* Home / Products */}
+      <Stack.Screen name="logout" /> {/* Home / Products */}
+      <Stack.Screen name="seller/dashboard" /> {/* Seller / dashboard */}
+      <Stack.Screen name="seller/add-product" /> {/* Seller / Add Products */}
+      <Stack.Screen name="seller/my-products" /> {/* Seller / My products */}
+      <Stack.Screen name="seller/edit-product" /> {/* Seller / Edit products */}
+      <Stack.Screen name="seller/inquiries" />{" "}
+      <Stack.Screen name="seller/delete-product" />{" "}
+      <Stack.Screen name="seller/advertise-with-us" />{" "}
+      {/* Seller / inquiries products */}
+      <Stack.Screen name="seller/reply-inquiry" />{" "}
+      {/* Seller / reply products */}
+      <Stack.Screen name="buyer/chat" /> {/* Buyer / chat UI */}
+      <Stack.Screen name="/buyer/search-results" /> {/* Buyer / chat UI */}
+      <Stack.Screen name="buyer/browse-products" /> {/* Buyer / chat UI */}
+      <Stack.Screen name="buyer/CategoryDetailScreen" /> {/* Buyer / chat UI */}
+      <Stack.Screen name="profile/edit-personal-details" />{" "}
+      <Stack.Screen name="buyer/post-buy-requirement" />{" "}
+      <Stack.Screen name="buyer/state-companies" />{" "}
+      <Stack.Screen name="blogs" /> {/* Footer Pages */}
+      <Stack.Screen name="FooterPages/industries" />
+      <Stack.Screen name="FooterPages/MakePayment" />
+      <Stack.Screen name="FooterPages/leads" />
+      <Stack.Screen name="FooterPages/sitemap" />
+      <Stack.Screen name="FooterPages/about" />
+      <Stack.Screen name="FooterPages/contact" />
+      <Stack.Screen name="catelogue/" />
+    </Stack>
   );
 }
