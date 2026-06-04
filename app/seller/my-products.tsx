@@ -2,39 +2,62 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    FlatList,
-    Image,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function MyProductsScreen() {
   const [products, setProducts] = useState([]);
-  const [sellerId, setSellerId] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadProducts = async () => {
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    try {
       const userData = await AsyncStorage.getItem("user");
-      if (!userData) return;
+
+      if (!userData) {
+        console.log("❌ No user found");
+        return;
+      }
 
       const user = JSON.parse(userData);
-      setSellerId(user.id);
+      const sellerId = user.id; // 🔥 correct
+
+      console.log("SELLER ID:", sellerId);
 
       const res = await fetch(
-        `https://api.visionworldmart.com/backend/api/seller/my-products.php?seller_id=${user.id}`,
+        `https://api.visionworldmart.com/backend/api/seller/my-products.php?seller_id=${sellerId}`,
       );
 
       const data = await res.json();
+      console.log("PRODUCT API:", data);
 
       if (data.status) {
-        setProducts(data.products);
+        setProducts(data.products || []);
       }
-    };
+    } catch (error) {
+      console.log("ERROR:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    loadProducts();
-  }, []);
+  // 🔄 Loader
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#0A3D62" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -96,7 +119,7 @@ export default function MyProductsScreen() {
         )}
       />
 
-      {/* Add Product Floating Button */}
+      {/* Add Product */}
       <TouchableOpacity
         style={styles.fab}
         onPress={() => router.push("/seller/add-product")}
@@ -108,24 +131,10 @@ export default function MyProductsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-    padding: 20,
-  },
-  header: {
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#0A3D62",
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#555",
-    marginTop: 4,
-  },
+  container: { flex: 1, backgroundColor: "#ffffff", padding: 20 },
+  header: { marginBottom: 20 },
+  title: { fontSize: 24, fontWeight: "bold", color: "#0A3D62" },
+  subtitle: { fontSize: 14, color: "#555", marginTop: 4 },
   card: {
     flexDirection: "row",
     backgroundColor: "#F8FAFC",
@@ -140,28 +149,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: "#eee",
   },
-  info: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  name: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#0A3D62",
-  },
-  price: {
-    fontSize: 14,
-    color: "#555",
-    marginTop: 2,
-  },
-  status: {
-    fontSize: 13,
-    marginTop: 4,
-    fontWeight: "600",
-  },
-  actions: {
-    alignItems: "flex-end",
-  },
+  info: { flex: 1, marginLeft: 12 },
+  name: { fontSize: 16, fontWeight: "600", color: "#0A3D62" },
+  price: { fontSize: 14, color: "#555", marginTop: 2 },
+  status: { fontSize: 13, marginTop: 4, fontWeight: "600" },
+  actions: { alignItems: "flex-end" },
   editBtn: {
     borderWidth: 1,
     borderColor: "#0A3D62",
@@ -176,16 +168,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 12,
   },
-  actionText: {
-    color: "#0A3D62",
-    fontSize: 13,
-    fontWeight: "500",
-  },
-  deleteText: {
-    color: "#C0392B",
-    fontSize: 13,
-    fontWeight: "500",
-  },
+  actionText: { color: "#0A3D62", fontSize: 13, fontWeight: "500" },
+  deleteText: { color: "#C0392B", fontSize: 13, fontWeight: "500" },
   fab: {
     position: "absolute",
     right: 20,
@@ -198,9 +182,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     elevation: 5,
   },
-  fabText: {
-    color: "#ffffff",
-    fontSize: 28,
-    fontWeight: "bold",
-  },
+  fabText: { color: "#ffffff", fontSize: 28, fontWeight: "bold" },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
 });

@@ -9,7 +9,7 @@ export default function RootLayout() {
     >
       {/* Auth Screens */}
       {/* <Stack.Screen name="home" /> */}
-      <Stack.Screen name="signup" /> {/* Register */}
+      <Stack.Screen name="signup" /> {/* login */}
       <Stack.Screen name="home" /> {/* Home / Products */}
       <Stack.Screen name="logout" /> {/* Home / Products */}
       <Stack.Screen name="seller/dashboard" /> {/* Seller / dashboard */}
@@ -37,6 +37,10 @@ export default function RootLayout() {
       <Stack.Screen name="FooterPages/about" />
       <Stack.Screen name="FooterPages/contact" />
       <Stack.Screen name="catelogue/" />
+      <Stack.Screen name="admin/dashboard" />
+      <Stack.Screen name="admin/add-enquiry" />
+      <Stack.Screen name="admin/enquiries" />
+      <Stack.Screen name="seller/enquiry-detail" />
     </Stack>
   );
 }

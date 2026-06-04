@@ -1,26 +1,29 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
-export default function RegisterScreen() {
+export default function SignupScreen() {
   const [name, setName] = useState("");
   const [emailOrMobile, setEmailOrMobile] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [companyId, setCompanyId] = useState(""); // optional
   const [loading, setLoading] = useState(false);
 
   const handleSignup = async () => {
-    // 1️⃣ Validation
+    // ✅ VALIDATION (company removed)
     if (!name || !emailOrMobile || !password || !confirmPassword) {
-      Alert.alert("Error", "All fields are required");
+      Alert.alert("Error", "All required fields must be filled");
       return;
     }
 
@@ -32,7 +35,6 @@ export default function RegisterScreen() {
     setLoading(true);
 
     try {
-      // 2️⃣ API call
       const res = await fetch(
         "https://api.visionworldmart.com/backend/api/auth/signup.php",
         {
@@ -41,25 +43,31 @@ export default function RegisterScreen() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            type: "signup",
             name: name,
-            email: emailOrMobile, // backend email field
-            mobile: emailOrMobile, // simple approach (later split)
+            email: emailOrMobile,
+            mobile: emailOrMobile,
             password: password,
-            role: "seller", // default seller
+            role: "seller",
+            company_id: companyId || null, // ✅ optional
           }),
         },
       );
 
       const data = await res.json();
+      console.log("SIGNUP RESPONSE:", data);
 
-      // 3️⃣ Response handle
       if (data.status) {
         Alert.alert("Success", "Account created successfully");
-        router.replace("/register"); // 🔥 go to login
+
+        await AsyncStorage.setItem("user", JSON.stringify(data.user || {}));
+
+        router.replace("/seller/dashboard");
       } else {
         Alert.alert("Error", data.message || "Signup failed");
       }
     } catch (error) {
+      console.log("SIGNUP ERROR:", error);
       Alert.alert("Error", "Server not responding");
     } finally {
       setLoading(false);
@@ -67,64 +75,74 @@ export default function RegisterScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.logo}>VisionWorldMart</Text>
-      <Text style={styles.subtitle}>Create Your B2B Account</Text>
+    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+      <View style={styles.container}>
+        <Text style={styles.logo}>VisionWorldMart</Text>
+        <Text style={styles.subtitle}>Create Your B2B Account</Text>
 
-      <TextInput
-        placeholder="Full Name"
-        style={styles.input}
-        value={name}
-        onChangeText={setName}
-      />
+        <TextInput
+          placeholder="Full Name"
+          style={styles.input}
+          value={name}
+          onChangeText={setName}
+        />
 
-      <TextInput
-        placeholder="Email or Mobile Number"
-        style={styles.input}
-        value={emailOrMobile}
-        onChangeText={setEmailOrMobile}
-      />
+        <TextInput
+          placeholder="Email or Mobile Number"
+          style={styles.input}
+          value={emailOrMobile}
+          onChangeText={setEmailOrMobile}
+        />
 
-      <TextInput
-        placeholder="Create Password"
-        secureTextEntry
-        style={styles.input}
-        value={password}
-        onChangeText={setPassword}
-      />
+        <TextInput
+          placeholder="Create Password"
+          secureTextEntry
+          style={styles.input}
+          value={password}
+          onChangeText={setPassword}
+        />
 
-      <TextInput
-        placeholder="Confirm Password"
-        secureTextEntry
-        style={styles.input}
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-      />
+        <TextInput
+          placeholder="Confirm Password"
+          secureTextEntry
+          style={styles.input}
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+        />
 
-      <TouchableOpacity
-        style={styles.signupBtn}
-        onPress={handleSignup}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.signupText}>Create Account</Text>
-        )}
-      </TouchableOpacity>
+        {/* OPTIONAL COMPANY FIELD */}
+        <TextInput
+          placeholder="Company ID (Optional)"
+          style={styles.input}
+          value={companyId}
+          onChangeText={setCompanyId}
+        />
 
-      <View style={styles.links}>
-        <Text style={styles.link}>By signing up, you agree to our</Text>
-        <Text style={styles.terms}>Terms & Conditions</Text>
-
-        <Text
-          style={[styles.link, { marginTop: 12 }]}
-          onPress={() => router.replace("/register")}
+        <TouchableOpacity
+          style={styles.signupBtn}
+          onPress={handleSignup}
+          disabled={loading}
         >
-          Already have an account? Login
-        </Text>
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.signupText}>Create Account</Text>
+          )}
+        </TouchableOpacity>
+
+        <View style={styles.links}>
+          <Text style={styles.link}>By signing up, you agree to our</Text>
+          <Text style={styles.terms}>Terms & Conditions</Text>
+
+          <Text
+            style={[styles.link, { marginTop: 12 }]}
+            onPress={() => router.replace("/login")}
+          >
+            Already have an account? Login
+          </Text>
+        </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 

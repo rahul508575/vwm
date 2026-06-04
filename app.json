@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "VisionWorldMart",
-    "slug": "vision-world-mart",
+    "slug": "vwm",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/playstore.png",

@@ -8,31 +8,53 @@ export default function CompanyProfileScreen() {
   const [personal, setPersonal] = useState<any>(null);
   const [business, setBusiness] = useState<any>(null);
   const [completion, setCompletion] = useState(0);
-
+  const safeJsonParse = (text) => {
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      console.log("JSON ERROR:", text);
+      return null;
+    }
+  };
   useEffect(() => {
     const loadProfile = async () => {
-      const userData = await AsyncStorage.getItem("user");
-      if (!userData) return;
+      try {
+        const userData = await AsyncStorage.getItem("user");
+        if (!userData) return;
 
-      const user = JSON.parse(userData);
+        const user = JSON.parse(userData);
+        console.log("USER DATA:", user);
 
-      // 🔹 Personal details
-      const res1 = await fetch(
-        `https://api.visionworldmart.com/backend/api/profile/get-company-profile.php?user_id=${user.id}`,
-      );
-      const pData = await res1.json();
+        // 🔥 COMPANY PROFILE (NOW USING company_id ✅)
+        const res1 = await fetch(
+          `https://api.visionworldmart.com/backend/api/profile/get-company-profile.php?company_id=${user.company_id}`,
+        );
 
-      // 🔹 Business details
-      const res2 = await fetch(
-        `https://api.visionworldmart.com/backend/api/profile/get-business-details.php?user_id=${user.id}`,
-      );
-      const bData = await res2.json();
+        const text1 = await res1.text();
+        console.log("PROFILE RAW:", text1);
 
-      if (pData.status) setPersonal(pData.profile);
-      if (bData.status) setBusiness(bData.business || {});
+        const pData = safeJsonParse(text1);
 
-      if (pData.status) {
-        calculateCompletion(pData.profile, bData.business || {});
+        // 🔥 BUSINESS DETAILS (ALSO company_id ✅)
+        const res2 = await fetch(
+          `https://api.visionworldmart.com/backend/api/profile/get-business-details.php?company_id=${user.company_id}`,
+        );
+
+        const text2 = await res2.text();
+        console.log("BUSINESS RAW:", text2);
+
+        const bData = safeJsonParse(text2);
+
+        // 🔥 SAFE SET
+        if (pData?.status) setPersonal(pData.company || {});
+        if (bData?.status) setBusiness(bData.company || {});
+
+        // 🔥 COMPLETION CALCULATION
+        if (pData?.status) {
+          calculateCompletion(pData.company || {}, bData?.company || {});
+        }
+      } catch (error) {
+        console.log("PROFILE ERROR:", error);
       }
     };
 
@@ -49,7 +71,7 @@ export default function CompanyProfileScreen() {
     if (p.mobile) filled++;
 
     // Business
-    if (b.company_name) filled++;
+    if (p.company_name) filled++;
     if (b.gstin) filled++;
     if (b.pan) filled++;
     if (b.address) filled++;
@@ -87,8 +109,12 @@ export default function CompanyProfileScreen() {
         </View>
 
         <Text style={styles.cardText}>Name : {personal.name || "N/A"}</Text>
-        <Text style={styles.cardText}>Mobile : {personal.mobile || "N/A"}</Text>
-        <Text style={styles.cardText}>Email : {personal.email || "N/A"}</Text>
+        <Text style={styles.cardText}>
+          Mobile : {business.comp_mobile || "N/A"}
+        </Text>
+        <Text style={styles.cardText}>
+          Email : {business.comp_email || "N/A"}
+        </Text>
       </View>
 
       {/* Business Details */}
@@ -104,14 +130,14 @@ export default function CompanyProfileScreen() {
         </View>
 
         <Text style={styles.cardText}>
-          Company Name : {business?.company_name || "N/A"}
+          Company Name : {personal?.company_name || "N/A"}
         </Text>
         <Text style={styles.cardText}>
           GSTIN No : {business?.gstin || "N/A"}
         </Text>
         <Text style={styles.cardText}>PAN No : {business?.pan || "N/A"}</Text>
         <Text style={styles.cardText}>
-          Address : {business?.address || "N/A"}
+          Address : {business?.comp_address || "N/A"}
         </Text>
       </View>
 

@@ -1,144 +1,103 @@
 <?php
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET");
-
-ini_set('display_errors', 0);
-error_reporting(0);
 
 require_once __DIR__ . "/../config/db.php";
 
-/* ================= VALIDATE ================= */
-$company_id = $_GET['company_id'] ?? '';
+/* ========= INPUT ========= */
+$keyword = $_GET['keyword'] ?? '';
+$type = $_GET['type'] ?? 'prod'; // prod OR comp
 
-if (!$company_id || !is_numeric($company_id)) {
+if (empty($keyword)) {
     echo json_encode([
         "status" => false,
-        "message" => "Invalid company id"
+        "message" => "Keyword required"
     ]);
     exit;
 }
 
-/* ================= COMPANY ================= */
-$stmt = $conn->prepare("
-    SELECT 
-        id,
-        comp_name,
-        comp_profile,
-        business_type,
-        year_of_establish,
-        comp_gst,
-        no_of_employee,
-        turnover,
-        dealing,
-        comp_mobile,
-        banner,
-        banner_sec,
-        banner_third,
-        slider_caption,
-        slider_sec_caption,
-        slider_third_caption,
-        slider_desc
-    FROM tbl_companies
-    WHERE id = ? AND comp_status = 'Active'
-    LIMIT 1
-");
+$key = "%" . $keyword . "%";
 
-if (!$stmt) {
-    echo json_encode([
-        "status" => false,
-        "message" => "Query error",
-    ]);
-    exit;
-}
+/* ========= PRODUCT SEARCH ========= */
+if ($type == "prod") {
 
-$stmt->bind_param("i", $company_id);
-$stmt->execute();
-$company = $stmt->get_result()->fetch_assoc();
+    $stmt = $conn->prepare("
+        SELECT 
+            p.id,
+            p.name,
+            p.image_name,
+            c.id as comp_id,
+            c.comp_name,
+            c.comp_url,
+            c.comp_city,
+            c.comp_state_name
+        FROM tbl_products p
+        JOIN tbl_companies c ON p.comp_id = c.id
+        WHERE p.status = 'Active' 
+        AND p.name LIKE ?
+        ORDER BY c.listing_priority DESC
+    ");
 
-if (!$company) {
-    echo json_encode([
-        "status" => false,
-        "message" => "Company not found"
-    ]);
-    exit;
-}
+    $stmt->bind_param("s", $key);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-/* ================= SLIDER ================= */
-$slider = [];
+    $data = [];
 
-$base = "https://api.visionworldmart.com/backend/uploads/comp_logo/";
+    while ($row = $result->fetch_assoc()) {
 
-if (!empty($company['banner'])) {
-    $slider[] = [
-        "image" => $base . $company['banner'],
-        "title" => $company['slider_caption'],
-        "desc"  => $company['slider_desc']
-    ];
-}
+        $data[] = [
+            "product_id" => (int)$row['id'],
+            "product_name" => $row['name'],
+            "image" => $row['image_name']
+                ? "https://api.visionworldmart.com/backend/uploads/products/" . $row['image_name']
+                : null,
 
-if (!empty($company['banner_sec'])) {
-    $slider[] = [
-        "image" => $base . $company['banner_sec'],
-        "title" => $company['slider_sec_caption'],
-        "desc"  => $company['slider_desc']
-    ];
-}
-
-if (!empty($company['banner_third'])) {
-    $slider[] = [
-        "image" => $base . $company['banner_third'],
-        "title" => $company['slider_third_caption'],
-        "desc"  => $company['slider_desc']
-    ];
-}
-
-/* ================= PRODUCTS ================= */
-$stmt = $conn->prepare("
-    SELECT id, name, image_name
-    FROM tbl_products
-    WHERE status = 'Active' AND comp_id = ?
-");
-
-$stmt->bind_param("i", $company_id);
-$stmt->execute();
-$result = $stmt->get_result();
-
-$products = [];
-$gallery  = [];
-
-while ($row = $result->fetch_assoc()) {
-    $img = $row['image_name']
-        ? "https://api.visionworldmart.com/backend/uploads/products/" . $row['image_name']
-        : null;
-
-    $products[] = [
-        "id" => (int)$row['id'],
-        "name" => $row['name'],
-        "image" => $img
-    ];
-
-    if ($img) {
-        $gallery[] = $img;
+            "company" => [
+                "id" => (int)$row['comp_id'],
+                "name" => $row['comp_name'],
+                "city" => $row['comp_city'],
+                "state" => $row['comp_state_name'],
+                "url" => $row['comp_url']
+            ]
+        ];
     }
+
+    echo json_encode([
+        "status" => true,
+        "total" => count($data),
+        "data" => $data
+    ]);
 }
 
-/* ================= RESPONSE ================= */
-echo json_encode([
-    "status" => true,
-    "company" => [
-        "id" => $company['id'],
-        "name" => $company['comp_name'],
-        "profile" => $company['comp_profile'],
-        "business_type" => $company['business_type'],
-        "year_of_establish" => $company['year_of_establish'],
-        "gst" => $company['comp_gst'],
-        "employees" => $company['no_of_employee'],
-        "turnover" => $company['turnover'],
-        "market" => $company['dealing'],
-        "phone" => $company['comp_mobile']
-    ],
-    "slider" => $slider,
-    "products" => $products,
-    "gallery" => array_slice($gallery, 0, 4)
-]);
+/* ========= COMPANY SEARCH ========= */
+elseif ($type == "comp") {
+
+    $stmt = $conn->prepare("
+        SELECT id, comp_name, comp_profile, comp_url
+        FROM tbl_companies
+        WHERE comp_name LIKE ?
+    ");
+
+    $stmt->bind_param("s", $key);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $data = [];
+
+    while ($row = $result->fetch_assoc()) {
+
+        $data[] = [
+            "company_id" => (int)$row['id'],
+            "name" => $row['comp_name'],
+            "profile" => strip_tags($row['comp_profile']),
+            "url" => $row['comp_url']
+        ];
+    }
+
+    echo json_encode([
+        "status" => true,
+        "total" => count($data),
+        "data" => $data
+    ]);
+}

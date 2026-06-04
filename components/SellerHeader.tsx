@@ -1,34 +1,47 @@
-import { router } from "expo-router";
+import { router, Stack } from "expo-router";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SellerHeader({ onMenuPress }: any) {
   return (
-    <View style={styles.header}>
-      {/* Hamburger */}
-      <TouchableOpacity onPress={onMenuPress}>
-        <Text style={styles.menu}>☰</Text>
-      </TouchableOpacity>
-
-      {/* Logo / Title */}
-      <Text
-        style={styles.title}
-        onPress={() => {
-          router.push("/webview/visionworldmart");
+    <SafeAreaView edges={["top"]} style={{ backgroundColor: "#F8FBFF" }}>
+      <Stack.Screen
+        options={{
+          headerShown: false,
         }}
-      >
-        <Text style={{ color: "#0A3D62", fontWeight: "bold", fontSize: 24 }}>
-          <Image
-            source={require("../assets/logo1.png")}
-            style={{ width: 200, height: 50, marginTop: 2 }}
-          />{" "}
-        </Text>
-      </Text>
+      />
+      <View style={styles.header}>
+        {/* Hamburger */}
+        <TouchableOpacity onPress={onMenuPress}>
+          <Text style={styles.menu}>☰</Text>
+        </TouchableOpacity>
 
-      {/* Right Button */}
-      <TouchableOpacity style={styles.joinBtn}>
-        <Text style={styles.joinText}>Join Now</Text>
-      </TouchableOpacity>
-    </View>
+        {/* Logo / Title */}
+        <Text
+          style={styles.title}
+          onPress={() => {
+            router.push("/webview/visionworldmart");
+          }}
+        >
+          <Text style={{ color: "#0A3D62", fontWeight: "bold", fontSize: 24 }}>
+            <Image
+              source={require("../assets/logo1.png")}
+              style={{ width: 200, height: 50, marginTop: 2 }}
+            />{" "}
+          </Text>
+        </Text>
+
+        {/* Right Button */}
+        <TouchableOpacity
+          style={styles.joinBtn}
+          onPress={() => {
+            router.push("/seller/advertise-with-us");
+          }}
+        >
+          <Text style={styles.joinText}>Join Now</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
 

@@ -72,11 +72,28 @@ export default function HomeScreen() {
   const [categories, setCategories] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch(API_URL)
-      .then((res) => res.json())
-      .then((json) => {
-        if (json.status) setCategories(json.categories);
-      });
+    const loadCategories = async () => {
+      try {
+        const res = await fetch(API_URL);
+
+        const text = await res.text();
+
+        if (!text) {
+          console.log("Empty response from API");
+          return;
+        }
+
+        const json = JSON.parse(text);
+
+        if (json?.status) {
+          setCategories(json.categories || []);
+        }
+      } catch (error) {
+        console.log("API Error:", error);
+      }
+    };
+
+    loadCategories();
   }, []);
 
   return (

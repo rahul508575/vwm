@@ -3,13 +3,13 @@ import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 
 import {
-    FlatList,
-    Image,
-    Linking,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  FlatList,
+  Image,
+  Linking,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -181,12 +181,21 @@ export default function SearchResultsScreen() {
     <View style={styles.leadCard}>
       <Text style={styles.leadTitle}>{item.product_name}</Text>
 
-      {!!item.quantity && (
-        <Text style={styles.info}>Quantity: {item.quantity}</Text>
+      {!!item.name && <Text style={styles.info}>By: {item.name}</Text>}
+      {!!item.qty && (
+        <Text style={styles.info}>
+          Quantity: {item.qty} {item.unit}
+        </Text>
       )}
 
       {!!item.location && (
         <Text style={styles.info}>Location: {item.location}</Text>
+      )}
+
+      {!!item.mobile && (
+        <Text style={styles.info}>
+          Contact: {item.mobile.slice(0, 6) + "xxxx"}
+        </Text>
       )}
 
       <TouchableOpacity style={styles.joinBtn}>

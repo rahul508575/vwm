@@ -18,7 +18,7 @@ if (!$user_id) {
 }
 
 $stmt = $conn->prepare(
-  "SELECT id, name, email, mobile
+  "SELECT id, name, email, mobile, company_id, company_name, membership
    FROM users
    WHERE id = ?"
 );

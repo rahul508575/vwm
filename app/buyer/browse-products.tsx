@@ -1,12 +1,12 @@
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    FlatList,
-    Image,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function BrowseProductsScreen() {
@@ -70,7 +70,6 @@ export default function BrowseProductsScreen() {
               </TouchableOpacity>
             ))}
 
-            {/* View All / View Less */}
             {item.subcategories.length > 4 && (
               <TouchableOpacity onPress={() => toggleExpand(item.id)}>
                 <Text style={styles.viewAll}>

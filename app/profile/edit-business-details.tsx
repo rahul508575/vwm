@@ -2,48 +2,74 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
 } from "react-native";
 
 export default function EditBusinessDetailsScreen() {
-  const [userId, setUserId] = useState<number | null>(null);
+  const [companyId, setCompanyId] = useState(null);
 
   const [companyName, setCompanyName] = useState("");
   const [gstin, setGstin] = useState("");
   const [pan, setPan] = useState("");
   const [address, setAddress] = useState("");
 
-  // 🔹 Load logged-in user + existing business details
+  // 🔥 SAFE JSON PARSE
+  const safeJsonParse = (text) => {
+    try {
+      return JSON.parse(text);
+    } catch {
+      console.log("JSON ERROR:", text);
+      return null;
+    }
+  };
+
+  // 🔹 LOAD DATA
   useEffect(() => {
     const loadData = async () => {
-      const userData = await AsyncStorage.getItem("user");
-      if (!userData) return;
+      try {
+        const userData = await AsyncStorage.getItem("user");
+        if (!userData) return;
 
-      const user = JSON.parse(userData);
-      setUserId(user.id);
+        const user = JSON.parse(userData);
 
-      const res = await fetch(
-        `https://api.visionworldmart.com/backend/api/profile/get-business-details.php?user_id=${user.id}`,
-      );
-      const data = await res.json();
+        if (!user?.company_id) {
+          console.log("No company linked");
+          return;
+        }
 
-      if (data.status) {
-        setCompanyName(data.business.company_name || "");
-        setGstin(data.business.gstin || "");
-        setPan(data.business.pan || "");
-        setAddress(data.business.address || "");
+        setCompanyId(user.company_id);
+
+        const res = await fetch(
+          `https://api.visionworldmart.com/backend/api/profile/get-business-details.php?company_id=${user.company_id}`,
+        );
+
+        const text = await res.text();
+        console.log("BUSINESS RAW:", text);
+
+        const data = safeJsonParse(text);
+
+        // ✅ EXISTING DATA
+        if (data?.status && data.business) {
+          setCompanyName(data.business.company_name || "");
+          setGstin(data.business.gstin || "");
+          setPan(data.business.pan || "");
+          setAddress(data.business.address || "");
+        }
+        // ❗ NEW USER → empty form (auto handled)
+      } catch (err) {
+        console.log("LOAD ERROR:", err);
       }
     };
 
     loadData();
   }, []);
 
-  // 🔹 Save business details
+  // 🔹 SAVE (INSERT + UPDATE)
   const handleSave = async () => {
     if (!companyName) {
       Alert.alert("Error", "Company name is required");
@@ -55,9 +81,11 @@ export default function EditBusinessDetailsScreen() {
         "https://api.visionworldmart.com/backend/api/profile/update-business-details.php",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({
-            user_id: userId,
+            company_id: companyId, // ✅ FIXED
             company_name: companyName,
             gstin,
             pan,
@@ -66,16 +94,19 @@ export default function EditBusinessDetailsScreen() {
         },
       );
 
-      const data = await res.json();
+      const text = await res.text();
+      const data = safeJsonParse(text);
 
-      if (data.status) {
-        Alert.alert("Success", "Business details updated");
+      console.log("SAVE RESPONSE:", data);
+
+      if (data?.status) {
+        Alert.alert("Success", "Business details saved");
         router.back();
       } else {
-        Alert.alert("Error", data.message || "Update failed");
+        Alert.alert("Error", data?.message || "Save failed");
       }
     } catch (err) {
-      console.log("BUSINESS UPDATE ERROR 👉", err);
+      console.log("SAVE ERROR:", err);
       Alert.alert("Error", "Server not responding");
     }
   };
@@ -84,7 +115,6 @@ export default function EditBusinessDetailsScreen() {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <Text style={styles.title}>Edit Business Details</Text>
 
-      {/* Company Name */}
       <Text style={styles.label}>Company Name</Text>
       <TextInput
         style={styles.input}
@@ -93,7 +123,6 @@ export default function EditBusinessDetailsScreen() {
         placeholder="Enter company name"
       />
 
-      {/* GSTIN */}
       <Text style={styles.label}>GSTIN Number</Text>
       <TextInput
         style={styles.input}
@@ -102,7 +131,6 @@ export default function EditBusinessDetailsScreen() {
         placeholder="Enter GSTIN number"
       />
 
-      {/* PAN */}
       <Text style={styles.label}>PAN Number</Text>
       <TextInput
         style={styles.input}
@@ -111,7 +139,6 @@ export default function EditBusinessDetailsScreen() {
         placeholder="Enter PAN number"
       />
 
-      {/* Address */}
       <Text style={styles.label}>Business Address</Text>
       <TextInput
         style={[styles.input, styles.textArea]}
@@ -121,12 +148,10 @@ export default function EditBusinessDetailsScreen() {
         multiline
       />
 
-      {/* Save */}
       <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
         <Text style={styles.saveText}>Save Changes</Text>
       </TouchableOpacity>
 
-      {/* Cancel */}
       <TouchableOpacity onPress={() => router.back()}>
         <Text style={styles.cancel}>Cancel</Text>
       </TouchableOpacity>

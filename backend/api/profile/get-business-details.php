@@ -4,7 +4,7 @@ header("Access-Control-Allow-Origin: *");
 
 include "../../config/db.php";
 
-$user_id = $_GET['user_id'] ?? '';
+$user_id = $_GET['company_id'] ?? '';
 
 if (!$user_id) {
   echo json_encode(["status" => false]);

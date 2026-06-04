@@ -1,11 +1,11 @@
 import { useState } from "react";
 import {
-    Image,
-    Linking,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Image,
+  Linking,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import EnquiryModal from "./EnquiryModal"; // path adjust kar lena
 

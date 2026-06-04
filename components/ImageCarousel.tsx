@@ -1,35 +1,24 @@
 import { useRef, useState } from "react";
-import {
-  Dimensions,
-  FlatList,
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Dimensions, FlatList, Image, StyleSheet, View } from "react-native";
 
 const { width } = Dimensions.get("window");
 
 const SLIDES = [
   {
     id: "1",
-    image:
-      "https://farmaishdryfruits.com/wp-content/uploads/2024/03/Dry-fruits-combo2.jpg",
+    image: require("../assets/banner2.png"),
     title: "Export Your Products",
     cta: "Start Selling",
   },
   {
     id: "2",
-    image:
-      "https://farmaishdryfruits.com/wp-content/uploads/2024/03/Dry-fruits-combo2.jpg",
+    image: require("../assets/banner4.png"),
     title: "Find Verified Suppliers",
     cta: "Explore Now",
   },
   {
     id: "3",
-    image:
-      "https://hips.hearstapps.com/hmg-prod/images/assortment-of-colorful-ripe-tropical-fruits-top-royalty-free-image-1747173002.pjpeg?crop=1.00xw:0.751xh;0,0.0839xh&resize=640:*",
+    image: require("../assets/banner3.png"),
     title: "India’s Growing B2B Platform",
     cta: "Join Free",
   },
@@ -55,16 +44,23 @@ export default function ImageCarousel() {
         renderItem={({ item }) => (
           <View>
             {/* Background Image */}
-            <Image source={{ uri: item.image }} style={styles.image} />
+            <Image
+              source={
+                typeof item.image === "string"
+                  ? { uri: item.image }
+                  : item.image
+              }
+              style={styles.image}
+            />
 
             {/* 🔤 TEXT OVERLAY */}
-            <View style={styles.overlay}>
+            {/* <View style={styles.overlay}>
               <Text style={styles.title}>{item.title}</Text>
 
               <TouchableOpacity style={styles.ctaBtn}>
                 <Text style={styles.ctaText}>{item.cta}</Text>
               </TouchableOpacity>
-            </View>
+            </View> */}
           </View>
         )}
       />

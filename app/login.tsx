@@ -2,17 +2,18 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function LoginScreen() {
-  const [login, setLogin] = useState(""); // email or mobile
+  const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -26,7 +27,6 @@ export default function LoginScreen() {
     setLoading(true);
 
     try {
-      // 2️⃣ API call (Android Emulator URL)
       const res = await fetch(
         "https://api.visionworldmart.com/backend/api/auth/login.php",
         {
@@ -42,20 +42,16 @@ export default function LoginScreen() {
       );
 
       const data = await res.json();
-
-      // 3️⃣ Handle response
+      console.log("LOGIN RESPONSE:", data);
       if (data.status) {
         // 🔥 SAVE USER IN ASYNC STORAGE
         await AsyncStorage.setItem("user", JSON.stringify(data.user));
-        // const savedUser = await AsyncStorage.getItem("user");
-        // console.log("SAVED USER 👉", savedUser);
-
         Alert.alert("Success", "Login successful");
 
         if (data.user.role === "seller") {
           router.replace("/seller/dashboard");
         } else {
-          router.replace("/register");
+          router.replace("/login");
         }
       }
     } catch (error) {
@@ -67,52 +63,54 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Logo / App Name */}
-      <Text style={styles.logo}>VisionWorldMart</Text>
-      <Text style={styles.subtitle}>B2B Marketplace Login</Text>
+    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+      <View style={styles.container}>
+        {/* Logo / App Name */}
+        <Text style={styles.logo}>VisionWorldMart</Text>
+        <Text style={styles.subtitle}>B2B Marketplace Login</Text>
 
-      {/* Email / Mobile */}
-      <TextInput
-        placeholder="Email or Mobile Number"
-        placeholderTextColor="#999"
-        style={styles.input}
-        value={login}
-        onChangeText={setLogin}
-        autoCapitalize="none"
-      />
+        {/* Email / Mobile */}
+        <TextInput
+          placeholder="Email or Mobile Number"
+          placeholderTextColor="#999"
+          style={styles.input}
+          value={login}
+          onChangeText={setLogin}
+          autoCapitalize="none"
+        />
 
-      {/* Password */}
-      <TextInput
-        placeholder="Password"
-        placeholderTextColor="#999"
-        secureTextEntry
-        style={styles.input}
-        value={password}
-        onChangeText={setPassword}
-      />
+        {/* Password */}
+        <TextInput
+          placeholder="Password"
+          placeholderTextColor="#999"
+          secureTextEntry
+          style={styles.input}
+          value={password}
+          onChangeText={setPassword}
+        />
 
-      {/* Login Button */}
-      <TouchableOpacity
-        style={styles.loginBtn}
-        onPress={handleLogin}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.loginText}>Login</Text>
-        )}
-      </TouchableOpacity>
+        {/* Login Button */}
+        <TouchableOpacity
+          style={styles.loginBtn}
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.loginText}>Login</Text>
+          )}
+        </TouchableOpacity>
 
-      {/* Links */}
-      <View style={styles.links}>
-        <Text style={styles.link}>Forgot Password?</Text>
-        <Text style={styles.link} onPress={() => router.push("/signup")}>
-          New User? Register
-        </Text>
+        {/* Links */}
+        <View style={styles.links}>
+          <Text style={styles.link}>Forgot Password?</Text>
+          <Text style={styles.link} onPress={() => router.push("/signup")}>
+            New User? login
+          </Text>
+        </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 

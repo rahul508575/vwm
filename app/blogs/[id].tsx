@@ -1,17 +1,16 @@
-import { useLocalSearchParams } from "expo-router";
-import {
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View
-} from "react-native";
+import { Stack, useLocalSearchParams } from "expo-router";
+import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function BlogDetailScreen() {
   const { id } = useLocalSearchParams();
 
   return (
     <ScrollView style={styles.container}>
+      <Stack.Screen
+        options={{
+          headerShown: false,
+        }}
+      />
       <Image
         source={{
           uri: "https://img.freepik.com/free-photo/business-people-meeting_53876-15178.jpg",

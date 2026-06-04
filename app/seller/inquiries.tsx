@@ -1,81 +1,153 @@
-import { FlatList, StyleSheet, Text, View } from "react-native";
-
-const DUMMY_ENQUIRIES = [
-  {
-    id: "1",
-    product: "Agriculture Seeds",
-    supplier: "Green Agro Pvt Ltd",
-    message: "Need bulk supply for export",
-    date: "22 Jan 2026",
-    status: "Replied",
-  },
-  {
-    id: "2",
-    product: "Electrical Wires",
-    supplier: "Sharma Electricals",
-    message: "Looking for price & MOQ",
-    date: "20 Jan 2026",
-    status: "New",
-  },
-  {
-    id: "3",
-    product: "Organic Fertilizer",
-    supplier: "FarmCare India",
-    message: "Please share brochure",
-    date: "18 Jan 2026",
-    status: "Closed",
-  },
-];
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function BuyerEnquiriesScreen() {
-  const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      {/* Header */}
-      <View style={styles.rowBetween}>
-        <Text style={styles.product}>{item.product}</Text>
-        <Text
-          style={[
-            styles.status,
-            item.status === "Replied" && styles.replied,
-            item.status === "New" && styles.new,
-            item.status === "Closed" && styles.closed,
-          ]}
-        >
-          {item.status}
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadEnquiries();
+  }, []);
+
+  const loadEnquiries = async () => {
+    try {
+      const stored = await AsyncStorage.getItem("user");
+
+      if (!stored) return;
+
+      const user = JSON.parse(stored);
+
+      const res = await fetch(
+        `https://api.visionworldmart.com/backend/api/seller/get-enquiries.php?seller_id=${user.company_id}`,
+      );
+
+      const json = await res.json();
+
+      if (json.status) {
+        setData(json.enquiries || []);
+      }
+    } catch (err) {
+      console.log("ERROR:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🔥 MARK AS READ FUNCTION
+  const markAsRead = async (id) => {
+    try {
+      await fetch(
+        "https://api.visionworldmart.com/backend/api/seller/mark-enquiry-read.php",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ id }),
+        },
+      );
+    } catch (err) {
+      console.log("READ ERROR:", err);
+    }
+  };
+
+  const formatDate = (date) => {
+    const d = new Date(date);
+    return d.toDateString();
+  };
+
+  const renderItem = ({ item }) => {
+    const status = item.is_read == 0 ? "New" : "Replied";
+
+    return (
+      <View style={styles.card}>
+        <View style={styles.rowBetween}>
+          <Text style={styles.product}>{item.product || "No Product"}</Text>
+
+          <Text
+            style={[
+              styles.status,
+              status === "Replied" && styles.replied,
+              status === "New" && styles.new,
+            ]}
+          >
+            {status}
+          </Text>
+        </View>
+
+        <Text style={styles.supplier}>
+          Supplier:
+          <Text style={styles.bold}>{item.company_name || "N/A"}</Text>
         </Text>
+
+        <Text style={styles.message}>"{item.message || "No message"}"</Text>
+
+        <View style={styles.footer}>
+          <Text style={styles.date}>{formatDate(item.created_at)}</Text>
+
+          <TouchableOpacity
+            onPress={async () => {
+              // 🔥 BACKEND UPDATE
+              await markAsRead(item.id);
+
+              // 🔥 INSTANT UI UPDATE
+              setData((prev) =>
+                prev.map((i) => (i.id === item.id ? { ...i, is_read: 1 } : i)),
+              );
+
+              // 🔥 NAVIGATE
+              router.push({
+                pathname: "/seller/enquiry-detail",
+                params: { item: JSON.stringify(item) },
+              });
+            }}
+          >
+            <Text style={styles.view}>View Details →</Text>
+          </TouchableOpacity>
+        </View>
       </View>
+    );
+  };
 
-      {/* Supplier */}
-      <Text style={styles.supplier}>
-        Supplier: <Text style={styles.bold}>{item.supplier}</Text>
-      </Text>
-
-      {/* Message */}
-      <Text style={styles.message}>"{item.message}"</Text>
-
-      {/* Footer */}
-      <View style={styles.footer}>
-        <Text style={styles.date}>{item.date}</Text>
-        <Text style={styles.view}>View Details →</Text>
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#0A3D62" />
       </View>
-    </View>
-  );
+    );
+  }
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>My Enquiries</Text>
       <Text style={styles.subtitle}>Track responses from suppliers</Text>
 
-      <FlatList
-        data={DUMMY_ENQUIRIES}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 20 }}
-      />
+      {data.length === 0 ? (
+        <Text style={{ textAlign: "center", marginTop: 40 }}>
+          No enquiries found
+        </Text>
+      ) : (
+        <FlatList
+          data={data}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={renderItem}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 20 }}
+        />
+      )}
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -121,7 +193,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
-    overflow: "hidden",
   },
 
   new: {
@@ -132,11 +203,6 @@ const styles = StyleSheet.create({
   replied: {
     backgroundColor: "#E8F8F5",
     color: "#117A65",
-  },
-
-  closed: {
-    backgroundColor: "#ECECEC",
-    color: "#555",
   },
 
   supplier: {
@@ -170,5 +236,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#0A3D62",
     fontWeight: "600",
+  },
+
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

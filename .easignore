@@ -1,0 +1,15 @@
+node_modules
+.git
+.gitignore
+android
+ios
+dist
+build
+.expo
+.expo-shared
+*.log
+*.zip
+*.apk
+*.aab
+assets/videos
+assets/raw

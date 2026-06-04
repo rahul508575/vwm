@@ -6,6 +6,7 @@ header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
+header("Access-Control-Allow-Credentials: true");
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
@@ -40,7 +41,7 @@ if ($login === '' || $password === '') {
 // FETCH USER (EMAIL OR MOBILE)
 // ===============================
 $stmt = $conn->prepare(
-    "SELECT id, name, email, mobile, password, role
+    "SELECT id, name, email, mobile, password, role, company_id, company_name, membership
      FROM users
      WHERE email = ? OR mobile = ?
      LIMIT 1"
@@ -78,10 +79,13 @@ echo json_encode([
     "status" => true,
     "message" => "Login successful",
     "user" => [
-        "id"     => $user['id'],
-        "name"   => $user['name'],
-        "email"  => $user['email'],
-        "mobile" => $user['mobile'],
-        "role"   => $user['role']
+        "id"           => $user['id'],
+        "name"         => $user['name'],
+        "email"        => $user['email'],
+        "mobile"       => $user['mobile'],
+        "role"         => $user['role'],
+        "company_id"   => $user['company_id'],
+        "company_name" => $user['company_name'],
+        "membership"   => $user['membership']
     ]
 ]);
