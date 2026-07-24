@@ -21,7 +21,7 @@ export default function MyProductsScreen() {
 
   const loadProducts = async () => {
     try {
-      const userData = await AsyncStorage.getItem("user");
+      const userData = await AsyncStorage.getItem("userInfo");
 
       if (!userData) {
         console.log("❌ No user found");

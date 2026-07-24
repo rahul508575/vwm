@@ -19,7 +19,7 @@ export default function CompanyProfileScreen() {
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const userData = await AsyncStorage.getItem("user");
+        const userData = await AsyncStorage.getItem("userInfo");
         if (!userData) return;
 
         const user = JSON.parse(userData);

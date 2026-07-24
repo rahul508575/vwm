@@ -17,7 +17,7 @@ export default function SellerAnalyticsScreen() {
         return isFinite(num) ? num : 0;
       };
 
-      const userData = await AsyncStorage.getItem("user");
+      const userData = await AsyncStorage.getItem("userInfo");
       if (!userData) return;
 
       const user = JSON.parse(userData);

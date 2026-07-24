@@ -10,6 +10,7 @@ export default function RootLayout() {
       {/* Auth Screens */}
       {/* <Stack.Screen name="home" /> */}
       <Stack.Screen name="signup" /> {/* login */}
+      <Stack.Screen name="login" /> {/* login */}
       <Stack.Screen name="home" /> {/* Home / Products */}
       <Stack.Screen name="logout" /> {/* Home / Products */}
       <Stack.Screen name="seller/dashboard" /> {/* Seller / dashboard */}

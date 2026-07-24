@@ -32,7 +32,7 @@ export default function EditBusinessDetailsScreen() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const userData = await AsyncStorage.getItem("user");
+        const userData = await AsyncStorage.getItem("userInfo");
         if (!userData) return;
 
         const user = JSON.parse(userData);

@@ -23,7 +23,7 @@ export default function SellerDashboard() {
   const [unreadCount, setUnreadCount] = useState(0);
 
   // ✅ SAFE JSON PARSE
-  const safeJsonParse = (text) => {
+  const safeJsonParse = (text: any) => {
     try {
       return JSON.parse(text);
     } catch {
@@ -34,7 +34,8 @@ export default function SellerDashboard() {
   // 🔥 MAIN DASHBOARD LOADER
   const loadDashboard = async () => {
     try {
-      const stored = await AsyncStorage.getItem("user");
+      const stored = await AsyncStorage.getItem("userInfo");
+      console.log("STORED USER:", stored);
       if (!stored) return;
 
       const u = JSON.parse(stored);
@@ -52,6 +53,7 @@ export default function SellerDashboard() {
 
         const text = await userRes.text();
         const userJson = safeJsonParse(text);
+        console.log("USER JSON: -------->", userJson);
 
         if (userJson?.status) {
           setName(userJson.name || "Seller");
@@ -79,16 +81,23 @@ export default function SellerDashboard() {
       }
 
       // ================= UNREAD =================
+      // 🐛 FIX: get-enquiries.php reads $_GET['company_id'], not
+      // "seller_id" — the param key here was wrong (was sending
+      // u.company_id's VALUE under a "seller_id" KEY), which is why
+      // the backend always replied "company_id required".
       try {
         const countRes = await fetch(
-          `https://api.visionworldmart.com/backend/api/seller/get-enquiries.php?seller_id=${u.company_id}`,
+          `https://api.visionworldmart.com/backend/api/seller/get-enquiries.php?company_id=${u.company_id}`,
         );
 
         const text = await countRes.text();
         const countJson = safeJsonParse(text);
         console.log("COUNT JSON: -------", countJson);
 
-        if (countJson?.status) {
+        // get-enquiries.php doesn't return a "status" field (see the
+        // file itself) — it returns { enquiries, total, unread }
+        // directly on success, so check for that shape instead.
+        if (countJson && !countJson.error) {
           setUnreadCount(countJson.unread || 0);
           setInquiryCount(countJson.total || 0);
         }
@@ -200,7 +209,15 @@ export default function SellerDashboard() {
 }
 
 /* COMPONENTS */
-const StatCard = ({ icon, label, value }) => (
+const StatCard = ({
+  icon,
+  label,
+  value,
+}: {
+  icon: string;
+  label: string;
+  value: number;
+}) => (
   <View style={styles.statCard}>
     <FontAwesome name={icon} size={22} color="#0A3D62" />
     <Text style={styles.statNumber}>{value}</Text>
@@ -208,7 +225,15 @@ const StatCard = ({ icon, label, value }) => (
   </View>
 );
 
-const ActionBtn = ({ icon, text, onPress }) => (
+const ActionBtn = ({
+  icon,
+  text,
+  onPress,
+}: {
+  icon: string;
+  text: string;
+  onPress: () => void;
+}) => (
   <TouchableOpacity style={styles.actionBtn} onPress={onPress}>
     <FontAwesome name={icon} size={16} color="#0A3D62" />
     <Text style={styles.actionText}>{text}</Text>

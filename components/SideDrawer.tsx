@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { apiService } from "../services/apiService"; // TODO: confirm relative path
 
 export default function SideDrawer({ onClose }: any) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -10,7 +11,7 @@ export default function SideDrawer({ onClose }: any) {
   // ✅ Check login from AsyncStorage (IMPORTANT)
   useEffect(() => {
     const checkLogin = async () => {
-      const user = await AsyncStorage.getItem("user"); // 👈 SAME KEY
+      const user = await AsyncStorage.getItem("userInfo"); // 👈 SAME KEY
       setIsLoggedIn(!!user);
     };
 
@@ -95,10 +96,15 @@ export default function SideDrawer({ onClose }: any) {
             icon="sign-out"
             label="Logout"
             onPress={async () => {
-              await AsyncStorage.removeItem("user");
+              // apiService.logout() clears BOTH the correct "userInfo" key
+              // AND the Keychain auth token — doing it here directly with
+              // removeItem("user") missed the real key ("userInfo") and
+              // left the auth token behind, which caused the "still
+              // logged in" / no Login-Signup-option bug.
+              await apiService.logout();
               setIsLoggedIn(false);
               onClose();
-              router.replace("/");
+              router.replace("/login");
             }}
           />
         </>

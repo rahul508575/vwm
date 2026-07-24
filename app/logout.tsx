@@ -15,7 +15,7 @@ export default function Logout() {
         );
 
         // Clear local session
-        await AsyncStorage.removeItem("user");
+        await AsyncStorage.removeItem("userInfo");
 
         // Redirect
         router.replace("/home");

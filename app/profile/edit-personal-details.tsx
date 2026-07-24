@@ -2,12 +2,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
 } from "react-native";
 
 export default function EditPersonalDetailsScreen() {
@@ -19,7 +19,7 @@ export default function EditPersonalDetailsScreen() {
   // 🔹 Load current user data
   useEffect(() => {
     const loadUser = async () => {
-      const userData = await AsyncStorage.getItem("user");
+      const userData = await AsyncStorage.getItem("userInfo");
       if (!userData) return;
 
       const user = JSON.parse(userData);

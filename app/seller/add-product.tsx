@@ -25,7 +25,7 @@ export default function AddProductScreen() {
   // 🔹 Load logged-in seller
   useEffect(() => {
     const loadUser = async () => {
-      const userData = await AsyncStorage.getItem("user");
+      const userData = await AsyncStorage.getItem("userInfo");
       if (userData) {
         const user = JSON.parse(userData);
         setSellerId(user.id);
