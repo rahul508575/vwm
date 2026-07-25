@@ -13,3 +13,5 @@ build
 *.aab
 assets/videos
 assets/raw
+socket-server
+backend
