@@ -1,11 +1,12 @@
 /**
  * 🔐 SECURE API SERVICE
  * Centralized API calls with error handling, timeout, and rate limiting
+ * UPDATED: Using expo-secure-store (Expo Go compatible)
  */
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import NetInfo from "@react-native-community/netinfo";
-import * as Keychain from "react-native-keychain";
+import * as SecureStore from "expo-secure-store";
 
 const API_BASE_URL = "https://api.visionworldmart.com/backend/api";
 const API_TIMEOUT = parseInt(process.env.EXPO_PUBLIC_API_TIMEOUT || "15000");
@@ -218,20 +219,20 @@ export class ApiService {
 
       return JSON.parse(text) as T;
     } catch (error) {
-      console.error("JSON Parse Error:", error);
+      console.error("❌ JSON Parse Error:", error);
       return null;
     }
   }
 
   /**
-   * Get stored auth token
+   * Get stored auth token from Expo Secure Store (Expo Go compatible)
    */
   private async getAuthToken(): Promise<string | null> {
     try {
-      const credentials = await Keychain.getGenericPassword();
-      return credentials ? credentials.password : null;
+      const token = await SecureStore.getItemAsync("vwm_token");
+      return token || null;
     } catch (error) {
-      console.error("Keychain error:", error);
+      console.error("❌ Secure Store error:", error);
       return null;
     }
   }
@@ -270,7 +271,7 @@ export class ApiService {
     );
 
     if (!result.success) {
-      console.error("Dashboard stats error:", result.error);
+      console.error("❌ Dashboard stats error:", result.error);
       return null;
     }
 
@@ -295,12 +296,12 @@ export class ApiService {
     );
 
     if (!result.success) {
-      console.error("Enquiries error:", result.error);
+      console.error("❌ Enquiries error:", result.error);
       return null;
     }
 
     const data = result.data;
-    console.log("Enquiries fetched:", data?.enquiries?.length || 0);
+    console.log("✅ Enquiries fetched:", data?.enquiries?.length || 0);
     return {
       enquiries: data?.enquiries || [],
       total: data?.total || 0,
@@ -318,7 +319,7 @@ export class ApiService {
     );
 
     if (!result.success) {
-      console.error("Enquiry detail error:", result.error);
+      console.error("❌ Enquiry detail error:", result.error);
       return null;
     }
 
@@ -372,7 +373,7 @@ export class ApiService {
     );
 
     if (!result.success) {
-      console.error("Products error:", result.error);
+      console.error("❌ Products error:", result.error);
       return null;
     }
 
@@ -431,14 +432,20 @@ export class ApiService {
   }
 
   /**
-   * Logout
+   * Logout and clear all stored data (Expo Go compatible)
    */
   async logout(): Promise<void> {
     try {
-      await Keychain.resetGenericPassword();
+      // Clear from Expo Secure Store
+      await SecureStore.deleteItemAsync("vwm_token");
+      console.log("✅ Token cleared from Secure Store");
+
+      // Clear from AsyncStorage
       await AsyncStorage.removeItem("userInfo");
+      await AsyncStorage.removeItem("lastActive");
+      console.log("✅ User data cleared");
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error("❌ Logout error:", error);
     }
   }
 }

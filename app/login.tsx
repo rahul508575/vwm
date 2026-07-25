@@ -1,11 +1,13 @@
 /**
  * 🔒 SECURE LOGIN SCREEN - FIXED VERSION
  * With debugging, proper navigation, and error handling
+ * UPDATED: Using expo-secure-store (Expo Go compatible)
  */
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import NetInfo from "@react-native-community/netinfo";
 import { router } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 import { useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -17,7 +19,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import * as Keychain from "react-native-keychain";
 import { validateLoginForm } from "../utils/validationHelpers";
 
 const API_BASE_URL =
@@ -192,13 +193,14 @@ export default function LoginScreen() {
           return;
         }
 
-        // ✅ STORE TOKEN SECURELY IN KEYCHAIN
+        // ✅ STORE TOKEN SECURELY IN EXPO SECURE STORE (Expo Go Compatible)
         if (data.token) {
           try {
-            await Keychain.setGenericPassword("vwm_token", data.token);
-            console.log("✅ TOKEN STORED IN KEYCHAIN");
-          } catch (keychainError) {
-            console.error("❌ KEYCHAIN ERROR:", keychainError);
+            await SecureStore.setItemAsync("vwm_token", data.token);
+            console.log("✅ TOKEN STORED IN SECURE STORE");
+          } catch (secureStoreError) {
+            console.error("❌ SECURE STORE ERROR:", secureStoreError);
+            // Non-critical error, continue anyway
           }
         }
 

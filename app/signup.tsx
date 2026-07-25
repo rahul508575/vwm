@@ -1,11 +1,13 @@
 /**
  * 🔒 SECURE SIGNUP SCREEN
  * With full input validation, error handling, and security best practices
+ * UPDATED: Using expo-secure-store (Expo Go compatible)
  */
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import NetInfo from "@react-native-community/netinfo";
 import { router } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -17,7 +19,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import * as Keychain from "react-native-keychain";
 import {
   checkPasswordStrength,
   validateSignupForm,
@@ -148,9 +149,15 @@ export default function SignupScreen() {
       }
 
       if (data.status && data.user) {
-        // ✅ STORE TOKEN SECURELY IN KEYCHAIN
+        // ✅ STORE TOKEN SECURELY IN EXPO SECURE STORE (Expo Go Compatible)
         if (data.token) {
-          await Keychain.setGenericPassword("vwm_token", data.token);
+          try {
+            await SecureStore.setItemAsync("vwm_token", data.token);
+            console.log("✅ TOKEN STORED IN SECURE STORE");
+          } catch (secureStoreError) {
+            console.error("❌ SECURE STORE ERROR:", secureStoreError);
+            // Non-critical error, continue anyway
+          }
         }
 
         // ✅ STORE NON-SENSITIVE USER INFO IN ASYNCSTORAGE
@@ -161,24 +168,38 @@ export default function SignupScreen() {
           role: data.user.role,
           company_id: data.user.company_id,
           company_name: data.user.company_name,
+          createdAt: new Date().toISOString(),
           // ❌ DO NOT STORE PASSWORD
         };
 
-        await AsyncStorage.setItem("userInfo", JSON.stringify(userInfo));
+        try {
+          await AsyncStorage.setItem("userInfo", JSON.stringify(userInfo));
+          console.log("✅ USER INFO STORED");
+        } catch (storageError) {
+          console.error("❌ STORAGE ERROR:", storageError);
+          Alert.alert("Error", "Failed to save user data");
+          return;
+        }
+
+        // ✅ SAVE SESSION TIMESTAMP FOR TIMEOUT
+        await AsyncStorage.setItem("lastActive", Date.now().toString());
 
         Alert.alert("Success", "Account created successfully");
-        router.replace("/seller/dashboard");
+        setTimeout(() => {
+          router.replace("/seller/dashboard");
+        }, 500);
       } else {
         Alert.alert("Error", data.message || "Signup failed. Please try again");
       }
     } catch (error) {
+      console.error("❌ SIGNUP EXCEPTION:", error);
+
       if (error.name === "AbortError") {
         Alert.alert("Error", "Request timeout. Please try again");
       } else if (error instanceof TypeError) {
         Alert.alert("Error", "Network error. Please check your connection");
       } else {
         Alert.alert("Error", "An unexpected error occurred");
-        console.error("SIGNUP ERROR:", error);
       }
     } finally {
       setLoading(false);
